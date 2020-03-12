@@ -2,12 +2,14 @@
     A simple topic model using singular value decomposition
     applied to a corpus of DBRC arrests.
 '''
+import os
 import json
 import numpy as np
 from collections import Counter
 from scipy.cluster.vq import kmeans2
 from numpy.linalg import svd
 from shutil import copyfile
+
 def low_rank_approx(matrix, k=10):
     """
     Computes an k-rank approximation of a matrix
@@ -46,7 +48,6 @@ def normalize(matrix):
     normalizedMatrix = (localFactors.T * globalFactors).T
     return normalizedMatrix
 
-
 def makeDocumentTermMatrix(data):
     '''
         Return the document-term matrix for the given list of stories.
@@ -62,12 +63,13 @@ def makeDocumentTermMatrix(data):
         The list of words include repetition, and the output document-
         term matrix contains as entry [i,j] the count of word i in story j
     '''
+
     words = allWords(data)
     wordToIndex = dict((word, i) for i, word in enumerate(words))
     indexToWord = dict(enumerate(words))
     indexToDocument = dict(enumerate(data))
-
     matrix = np.zeros((len(words), len(data)))
+
     for docID, document in enumerate(data):
         docWords = Counter(document['words'])
         for word, count in docWords.items():
@@ -83,20 +85,24 @@ def cluster(vectors):
     """
     return kmeans2(vectors, k=len(vectors[0]))
 
-
 def allWords(data):
     words = set()
     for entry in data:
         words |= set(entry['words'])
     return list(sorted(words))
 
-
 def load():
     with open('all_stories.json', 'r') as infile:
         data = json.loads(infile.read())
     return data
 
-
+if not os.path.exists('clusteredDocuments'):
+    os.mkdir('clusteredDocuments')
+    os.mkdir('clusteredDocuments/1')
+    os.mkdir('clusteredDocuments/2')
+    os.mkdir('clusteredDocuments/3')
+    os.mkdir('clusteredDocuments/4')
+    os.mkdir('clusteredDocuments/5')
 
 data = load()
 matrix, (indexToWord, indexToDocument) = makeDocumentTermMatrix(data)
@@ -114,7 +120,7 @@ documentClusters = [
 clusterNumber=1
 for clusters in documentClusters:
     for clusteredDocumentName in clusters:
-        srcfile='../../data/tauExptData/hundSent/'+clusteredDocumentName
+        srcfile='./hundSent/'+clusteredDocumentName
         dstfile='clusteredDocuments/'+str(clusterNumber)+'/'+clusteredDocumentName
         copyfile(srcfile,dstfile)
     clusterNumber+=1
